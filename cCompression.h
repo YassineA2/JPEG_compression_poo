@@ -28,7 +28,7 @@ double calc_2nd_smoll_sum(double **DCT_Img, int x, int y){
             if(v != 0)
                 {C_v = 1.0;}
             else
-                {C_v = 1/sqrt(2);} 
+                {C_v = 1/sqrt(2);}
             Sum_smoll += DCT_Img[u][v] * C_u * C_v * cos(((2*x+1)* M_PI * u)/16) * cos(((2*y+1)* M_PI * v)/16);
         }
     }
@@ -57,6 +57,10 @@ public:
     void Calcul_DCT_Block(unsigned char **Bloc8x8, double **DCT_Img);
     // fct calcule de DCT inverse d'un bloc 8 x 8
     void Calcul_iDCT_Block(unsigned char **Bloc8x8, double **DCT_Img);
+    // fct qui calcule l'img quantifiée Img_Quant
+    void quant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn);
+    // fct qui calcule l'img déquantifiée Img_Quant
+    void dequant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn);
 };
 
 
@@ -137,12 +141,12 @@ void cCompression::Calcul_DCT_Block(unsigned char **Bloc8x8, double **DCT_Img){
             if(v != 0)
                 {C_v = 1.0;}
             else
-                {C_v = 1/sqrt(2);}  
-            DCT_Img[u][v] = C_u * C_v * calc_smoll_sum(Bloc8x8, u, v)/4.0;  
+                {C_v = 1/sqrt(2);}
+            DCT_Img[u][v] = C_u * C_v * calc_smoll_sum(Bloc8x8, u, v)/4.0;
 
             /*
             or this ( inline instead of a fct)
-                
+
             Sum_smoll = 0.0;
             for(int x=0;x<Taille_Block;x++){
                 for(int y=0;y<Taille_Block;y++){
@@ -164,8 +168,73 @@ void cCompression::Calcul_iDCT_Block(unsigned char **Bloc8x8, double **DCT_Img){
     }
 }
 
+void cCompression::quant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn){
+    double lambda;
+
+    if (mQualite < 50)
+        lambda = 5000.0/mQualite;
+    else
+        lambda = 200.0-(2*mQualite);
+
+    double **Q_tab = new double* [8];
+    for(int i=0;i<8;i++){
+        Q_tab[i] = new double[8];
+    }
+
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++){
+            if( ((Q_dyn[i][j]*lambda+50.0)/100.0) < 1)
+                {Q_tab[i][j] = 1.0;}
+            else if ( ((Q_dyn[i][j]*lambda+50.0)/100.0) > 255)
+                {Q_tab[i][j] = 255.0;}
+            else
+                Q_tab[i][j] = ((Q_dyn[i][j]*lambda+50.0)/100.0);
+        }
+    }
+
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++){
+            Img_Quant[i][j] = floor( (DCT_Img[i][j]/Q_tab[i][j]) + 0.5);
+        }
+    }
+
+}
+
+void cCompression::dequant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn){
+    double lambda;
+
+    if (mQualite < 50)
+        lambda = 5000.0/mQualite;
+    else
+        lambda = 200.0-(2*mQualite);
+
+    double **Q_tab = new double* [8];
+    for(int i=0;i<8;i++){
+        Q_tab[i] = new double[8];
+    }
+
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++){
+            if( ((Q_dyn[i][j]*lambda+50.0)/100.0) < 1)
+                {Q_tab[i][j] = 1.0;}
+            else if ( ((Q_dyn[i][j]*lambda+50.0)/100.0) > 255)
+                {Q_tab[i][j] = 255.0;}
+            else
+                Q_tab[i][j] = ((Q_dyn[i][j]*lambda+50.0)/100.0);
+        }
+    }
+
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++){
+            DCT_Img[i][j] = Img_Quant[i][j] * Q_tab[i][j];
+        }
+    }
+
+}
 
 
 
 
 #endif // CCOMPRESSION_H_
+
+
