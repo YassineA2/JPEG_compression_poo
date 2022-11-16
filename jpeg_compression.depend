@@ -1,8 +1,9 @@
 # depslib dependency file v1.0
-1668074831 source:d:\1- sfa cours\prog cpp\jpeg_compression\main.cpp
+1668595709 source:d:\1- sfa cours\prog cpp\jpeg_compression\main.cpp
 	<iostream>
 	"cCompression.h"
 
-1668074952 d:\1- sfa cours\prog cpp\jpeg_compression\ccompression.h
+1668598044 d:\1- sfa cours\prog cpp\jpeg_compression\ccompression.h
 	<math.h>
+	<iostream>
 

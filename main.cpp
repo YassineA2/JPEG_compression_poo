@@ -5,19 +5,6 @@ using namespace std;
 
 int main()
 {
-    //testing the constructor
-    cCompression elmt_1(8,8);
-    cCompression elmt_2(elmt_1);
-    //testing the getters
-    cout<<"Largeur: "<<elmt_1.get_mLargeur()<<endl
-        <<"Hauteur: "<<elmt_1.get_mHauteur()<<endl
-        <<"Qualite: "<<elmt_1.get_mQualite()<<endl
-        <<elmt_1.get_mBuffer()[0][0]<<endl;
-
-
-
-
-
     // 8 x 8 block used for testing
     unsigned char block[8][8] = {{11, 16, 21, 25, 27, 27, 27, 27},
                                  {16, 23, 25, 28, 31, 28, 28, 28},
@@ -39,7 +26,7 @@ int main()
                    {72, 92, 95, 98, 112, 100, 103, 99}};
 
     //------
-    // MALLOC the two used variables: **block_dyn & **res
+    // MALLOC the used variables: **block_dyn & **res & **Img_Quant & **Q_dyn
     //------
     double **res = new double* [8];
     for(int i=0;i<8;i++){
@@ -62,6 +49,8 @@ int main()
     for(int i=0;i<8;i++){
         Q_dyn[i] = new double[8];
     }
+
+
 
     //------
     // init their variables
@@ -87,11 +76,13 @@ int main()
     //------
     // affichage
     //------
+    /*
     for(int i = 0; i < 8; i++){
         for(int j = 0; j < 8; j++)
             {cout<<(int)block_dyn[i][j]<<" ";}
         cout<<endl;
     }
+
     //------
     for(int i = 0; i < 8; i++){
         for(int j = 0; j < 8; j++)
@@ -104,20 +95,43 @@ int main()
             {cout<<(int)Q_dyn[i][j]<<" ";}
         cout<<endl;
     }
+    */
+
+    //testing the constructor
+    cCompression elmt_1(8,8, block_dyn);
+    cCompression elmt_2(elmt_1);
+    //testing the getters
+    cout<<"Largeur: "<<elmt_1.get_mLargeur()<<endl
+        <<"Hauteur: "<<elmt_1.get_mHauteur()<<endl
+        <<"Qualite: "<<elmt_1.get_mQualite()<<endl;
+
+    cout<<"Buffer: "<<endl;
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++)
+            {
+                cout<<(int)elmt_1.get_mBuffer()[i][j]+127.0<<" ";}
+        cout<<endl;
+    }
+    cout<<endl;
+
+
 
 
     //------
     // CALC DCT & AFFICHAGE
     elmt_1.Calcul_DCT_Block(block_dyn, res);
 
+    cout<<"DCT Block: "<<endl;
     for(int i = 0; i < 8; i++){
         for(int j = 0; j < 8; j++)
             {
                 cout<<res[i][j]<<" ";}
         cout<<endl;
     }
+    cout<<endl;
     //------
     // QUANTIFICATION & AFFICHAGE
+    cout<<"Quant: "<<endl;
     elmt_1.quant_JPEG(res, Img_Quant,Q_dyn);
 
     for(int i = 0; i < 8; i++){
@@ -126,24 +140,58 @@ int main()
                 cout<<Img_Quant[i][j]<<" ";}
         cout<<endl;
     }
+    cout<<endl;
+    //------
+    // CALCUL TAUX COMPRESSION
+    cout<<endl<<"LE TAUX COMPRESSION EST :"<<elmt_1.Taux_Compression(Img_Quant)<<endl<<endl;
+
+
+    char *Trame;
+    elmt_1.RLE_Block(Img_Quant, 5,Trame);
+    cout<<endl;
+
+
+
+
+
+
+
+
 
 
 
     //------
+    // DEQUANTIFICATION & AFFICHAGE
+    cout<<"dequant: "<<endl;
+    elmt_1.dequant_JPEG(res, Img_Quant,Q_dyn);
+
+    for(int i = 0; i < 8; i++){
+        for(int j = 0; j < 8; j++)
+            {
+                cout<<res[i][j]<<" ";}
+        cout<<endl;
+    }
+    cout<<endl;
+    //------
     // CALC iDCT & AFFICHAGE
+    cout<<"iDCT Block: "<<endl;
     elmt_1.Calcul_iDCT_Block(block_dyn, res);
 
     for(int i = 0; i < 8; i++){
         for(int j = 0; j < 8; j++)
             {
-                cout<<(int)block_dyn[i][j]<<" ";}
+                cout<<(int)block_dyn[i][j]+127<<" ";}
         cout<<endl;
     }
+    cout<<endl;
+    //------
+    // CALCUL EQM
+    cout<<endl<<"LE EQM EST :"<<elmt_1.EQM(block_dyn)<<endl<<endl;
 
 
     return 0;
 }
-    
+
 
 
 
@@ -173,7 +221,7 @@ for(int i = 0; i < 8; i++){
     for(int j = 0; j < 8; j++)
         {cout<<(int)block_dyn[i][j]<<" ";}
     cout<<endl;
-    }  
+    }
 */
 
 
