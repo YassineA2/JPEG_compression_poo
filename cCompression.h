@@ -8,6 +8,15 @@ using namespace std;
 const int Taille_Block = 8;
 const int pi = 3.14; // hehehehehehe (fml)
 
+int Q[8][8] = {{16, 11, 10, 16, 24, 40, 51, 61},
+                   {12, 12, 14, 19, 26, 58, 60, 55},
+                   {14, 13, 16, 24, 40, 57, 69, 56},
+                   {14, 17, 22, 29, 51, 87, 80, 62},
+                   {18, 22, 37, 56, 68, 109, 103, 77},
+                   {24, 35, 55, 64, 81, 104, 113, 92},
+                   {49, 64, 78, 87, 103, 121, 120, 101},
+                   {72, 92, 95, 98, 112, 100, 103, 99}};
+
 double calc_smoll_sum(unsigned char **Bloc8x8, int u, int v){
     double Sum_smoll = 0.0;
     for(int x=0;x<Taille_Block;x++){
@@ -64,10 +73,12 @@ public:
     // fct qui calcule l'img déquantifiée Img_Quant
     void dequant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn);
 
-    double EQM(unsigned char **Img_Quant);
+    double EQM(unsigned char **Bloc8x8);
     int Taux_Compression(int **Img_Quant);
 
-    void RLE_Block(int **Img_Quant, int DC_precedent, char *Trame);
+    int* RLE_Block(int **Img_Quant, int DC_precedent, int &Trame_size);
+
+    int** RLE(void);
 };
 
 
@@ -204,7 +215,6 @@ void cCompression::quant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn)
             Img_Quant[i][j] = floor((floor(DCT_Img[i][j]+0.5)/Q_tab[i][j]) + 0.5);
         }
     }
-
 }
 
 void cCompression::dequant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn){
@@ -261,11 +271,13 @@ int cCompression::Taux_Compression(int **Img_Quant){
 }
 
 
-void cCompression::RLE_Block(int **Img_Quant, int DC_precedent, char *Trame){
-    int * tmp = new int[64];
+int* cCompression::RLE_Block(int **Img_Quant, int DC_precedent, int &Trame_size){
+    int *tmp = new int[64];
     int x,y;
     int ctr = 0;
+    int nbr_elmts = 1;
 
+    //flatten the matrice in a list
     tmp[0] = Img_Quant[0][0];
     tmp[63] = Img_Quant[7][7];
     for(int t=1;t<8;t++){
@@ -273,6 +285,8 @@ void cCompression::RLE_Block(int **Img_Quant, int DC_precedent, char *Trame){
             x = t;
             y = 0;
             do{
+                if(Img_Quant[x][y] != 0)
+                    nbr_elmts++;
                 //cout<<"["<<x<<"]"<<"["<<y<<"]"<<endl;
                 //cout<<Img_Quant[x][y]<<endl;
                 ctr++;
@@ -287,6 +301,8 @@ void cCompression::RLE_Block(int **Img_Quant, int DC_precedent, char *Trame){
             x = 0;
             y = t;
             do{
+                if(Img_Quant[x][y] != 0)
+                    nbr_elmts++;
                 //cout<<"**["<<x<<"]"<<"["<<y<<"]"<<endl;
                 //cout<<Img_Quant[x][y]<<endl;
                 ctr++;
@@ -297,12 +313,91 @@ void cCompression::RLE_Block(int **Img_Quant, int DC_precedent, char *Trame){
             }
             while(x != t+1);
         }
-
     }
-    for(int i=0;i<64;i++)
-        cout<<tmp[i]<<" ";
+    
+    // calc zeros n shit
+    Trame_size = (nbr_elmts*2)+1;
+    int *Trame = new int[Trame_size];
 
+
+
+
+    int pp = 0;
+    int zeros_cnt = 0;
+
+    Trame[pp] = tmp[0];
+    pp++;
+    Trame[nbr_elmts*2] = 0;
+    for (int i = 1; i<64; i++){
+        if (tmp[i] != 0){
+            Trame[pp] = zeros_cnt;
+            pp++;
+            Trame[pp] = tmp[i];
+            pp++;
+            zeros_cnt = 0;
+        }
+        else{
+            zeros_cnt++;
+        }
     }
+    cout<<Trame_size<<endl;
+    for(int i=0;i<Trame_size;i++)
+        cout<<Trame[i]<<" ";
+    cout<<endl;
+    
+    return Trame;
+}
+
+
+int** cCompression::RLE(void){
+    // unsigned int mLargeur;  //largeur de l'image
+    // unsigned int mHauteur;  //longeur de l'image
+    // unsigned char **mBuffer;//l'image
+    int nb_block_8x8 = (mLargeur/8) * (mHauteur/8);
+    int **Trame = new int*[nb_block_8x8];
+
+
+
+    unsigned char **c_Bloc8x8 = new unsigned char* [8];
+    for(int i=0;i<8;i++){
+        c_Bloc8x8[i] = new unsigned char[8];
+    }
+
+    double **c_DCT_Img = new double* [8];
+    for(int i=0;i<8;i++){
+        c_DCT_Img[i] = new double[8];
+    }
+
+    int **c_Img_Quant = new int* [8];
+    for(int i=0;i<8;i++){
+        c_Img_Quant[i] = new int[8];
+    }
+
+    double **c_Q_dyn = new double* [8];
+    for(int i=0;i<8;i++){
+        c_Q_dyn[i] = new double[8];
+    }
+
+    int *c_Trame;
+    int c_Trame_size;
+
+    
+    for(int macro = 0; macro < nb_block_8x8; macro++){
+        for(int i = 0; i < 8; i++){
+            for(int j = 0; j < 8; j++){
+                c_Bloc8x8[i][j] = mBuffer[(macro*8)+i][(macro*8)+j];
+                c_DCT_Img[i][j] = 0.0;
+                c_Img_Quant[i][j] = 0.0;
+                c_Q_dyn[i][j] = Q[i][j];
+            }
+        }
+
+        Calcul_DCT_Block(c_Bloc8x8, c_DCT_Img);
+        quant_JPEG(c_DCT_Img, c_Img_Quant, c_Q_dyn);
+        Trame[macro] = RLE_Block(c_Img_Quant, 5, c_Trame_size);
+    }
+    return Trame;
+}
 
 #endif // CCOMPRESSION_H_
 
