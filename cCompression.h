@@ -246,7 +246,6 @@ void cCompression::dequant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dy
             DCT_Img[i][j] = Img_Quant[i][j] * Q_tab[i][j];
         }
     }
-
 }
 
 double cCompression::EQM(unsigned char **Bloc8x8){
@@ -269,7 +268,6 @@ int cCompression::Taux_Compression(int **Img_Quant){
     }
     return 100 - (100*res/64);
 }
-
 
 int* cCompression::RLE_Block(int **Img_Quant, int DC_precedent, int &Trame_size){
     int *tmp = new int[64];
@@ -349,6 +347,7 @@ int* cCompression::RLE_Block(int **Img_Quant, int DC_precedent, int &Trame_size)
 }
 
 
+// add DC precedent somewhere in here (above or below)
 int** cCompression::RLE(void){
     // unsigned int mLargeur;  //largeur de l'image
     // unsigned int mHauteur;  //longeur de l'image
