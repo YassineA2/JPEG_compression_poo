@@ -12,6 +12,6 @@ int main(){
 
     cHuffman var(dat, 6, &nodee);
     var.HuffmanCodes(dat, f, 6);
-    var.AfficherHuffman();
+    var.AfficherHuffman(6);
 return 0;   
 }
