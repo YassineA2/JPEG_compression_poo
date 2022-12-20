@@ -146,13 +146,11 @@ int main()
     cout<<endl<<"LE TAUX COMPRESSION EST :"<<elmt_1.Taux_Compression(Img_Quant)<<endl<<endl;
 
 
+    // calcul de la trame RLE
     int *Trame;
     int Trame_size;
     Trame = elmt_1.RLE_Block(Img_Quant, 5, Trame_size);
 
-    
-    // j'ai fait l'allocation de memoire a l'interieur de la fonction, 
-    //et j'affecte le res a un pointeur dans le main, est ce que il y'a un prob de gestion de memoire ou pas
     // pp est tableau de pointeurs, chaque pointeur represente trame RLE pour un bloc de l'img
     int** pp = elmt_1.RLE();
 

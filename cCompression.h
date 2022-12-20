@@ -5,8 +5,12 @@
 #include <iostream>
 using namespace std;
 
-const int Taille_Block = 8;
-const int pi = 3.14; // hehehehehehe (fml)
+/*! @file 
+ *  Contient la declaration de la classe cCompression.
+ */
+
+const int Taille_Block = 8; // taille d'un bloc de l'image
+//const int pi = 3.14; // hehehehehehe (fml)
 
 int Q[8][8] = {{16, 11, 10, 16, 24, 40, 51, 61},
                    {12, 12, 14, 19, 26, 58, 60, 55},
@@ -15,7 +19,7 @@ int Q[8][8] = {{16, 11, 10, 16, 24, 40, 51, 61},
                    {18, 22, 37, 56, 68, 109, 103, 77},
                    {24, 35, 55, 64, 81, 104, 113, 92},
                    {49, 64, 78, 87, 103, 121, 120, 101},
-                   {72, 92, 95, 98, 112, 100, 103, 99}};
+                   {72, 92, 95, 98, 112, 100, 103, 99}};  // table de référence prévue pour quantifier la luminance dans la norme JPEG
 
 double calc_smoll_sum(unsigned char **Bloc8x8, int u, int v){
     double Sum_smoll = 0.0;
@@ -46,38 +50,137 @@ double calc_2nd_smoll_sum(double **DCT_Img, int x, int y){
     return Sum_smoll;
 }
 
+
+/*! @class cCompression
+ * une classe qui effectue des calculs sur une image (DCT/quantification/RLE)
+ */
 class cCompression{
 private:
-    unsigned int mLargeur;  //largeur de l'image
-    unsigned int mHauteur;  //longeur de l'image
-    unsigned char **mBuffer;//l'image
-    unsigned int mQualite;  //qualite de compression (0 to 100, default 50)
+    unsigned int mLargeur;  // largeur de l'image
+    unsigned int mHauteur;  // longeur de l'image
+    unsigned char **mBuffer;// l'image
+    unsigned int mQualite;  // qualite de compression (0 to 100, default 50)
 public:
+    
+    /*! @brief Constructeur de la classe qui opère sur l'image
+    *
+    * @param[in] Larg largeur de l'image
+    * @param[in] Haut hauteur de l'image
+    * @param[in] block_dyn double pointeur qui represente l'image en binaire
+    * @param[in] Qual la qualité de la compression
+    */
     cCompression(unsigned int Larg, unsigned int Haut, unsigned char **block_dyn, unsigned int Qual = 50);
+    
+    /*! @brief Constructeur par copie de la classe qui opere sur l'image
+    *
+    * 
+    * @param[in] elmt l'element à utiliser pour construire l'objet
+    */
     cCompression(cCompression &elmt);
+    
+    /*! @brief Destructeur de la classe qui opère sur l'image
+    *
+    */
     ~cCompression();
 
     // GETTERS / SETTERS
+    /*! @brief Simple getter qui retourne la largeur de l'image
+    *
+    */
     unsigned int get_mLargeur();
+    
+    /*! @brief Simple getter qui retourne la hauteur de l'image
+    *
+    */
     unsigned int get_mHauteur();
+    
+    /*! @brief Simple getter qui retourne le pointeur sur l'image
+    *
+    */
     unsigned char** get_mBuffer();
+    
+    /*! @brief Simple getter qui retourne la qualité de la compression utilisé
+    *
+    */
     unsigned int get_mQualite();
+    
+    /*! @brief Setter simple qui permet de modifier les attributs de l'objet
+    * @param[in] Larg largeur de l'image
+    * @param[in] Haut hauteur de l'image
+    * @param[in] Buff double pointeur qui represente l'image en binaire
+    * @param[in] Qual la qualité de la compression
+    *
+    */
     void set_elmt(const unsigned int Larg, const unsigned int Haut, const unsigned char **Buff, const unsigned int Qual);
-
-    // fct calcule de DCT d'un bloc 8 x 8
+    
+    /*! @brief Fonction qui calcule la DCT d'un bloc 8 x 8
+    * 
+    * @param[in] Bloc8x8 Le bloc 8x8 de l'image ou on applique la DCT
+    * @param[in] DCT_Img Le resultat du calcul de la DCT
+    *
+    */
     void Calcul_DCT_Block(unsigned char **Bloc8x8, double **DCT_Img);
-    // fct calcule de DCT inverse d'un bloc 8 x 8
+
+    /*! @brief Fonction qui calcule la DCT inverse d'un bloc 8 x 8
+    * 
+    * Cette fonction sera nécessaire pour évaluer le taux de compression d’un bloc et pour vérifier la réversibilité de la DCT.
+    * 
+    * @param[in] Bloc8x8 Le resultat du calcul de la iDCT
+    * @param[in] DCT_Img Le bloc utilisé pour calculer la DCT inverse
+    *
+    */
     void Calcul_iDCT_Block(unsigned char **Bloc8x8, double **DCT_Img);
-    // fct qui calcule l'img quantifiée Img_Quant
+
+    /*! @brief Fonction de quantification d'un bloc d'image 8x8
+    * 
+    * Cette fonction prend en argument un bloc 8x8 de l'image après DCT et une table de reference, et calcule l’image quantifiée Img_Quant.
+    * 
+    * @param[in] DCT_Img Le bloc de l'image apres DCT
+    * @param[in] Img_Quant le resultat de la quantification
+    * @param[in] Q_dyn table de référence prévue pour quantifier la luminance dans la norme JPEG
+    *
+    */
     void quant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn);
     // fct qui calcule l'img déquantifiée Img_Quant
+
+    /*! @brief Fonction de déquantification d'un bloc d'image 8x8
+    * 
+    * Cette fonction prend en argument un bloc 8x8 d'une image quantifiée et une table de reference, et calcule l’image dequantifiée.
+    * 
+    * @param[in] DCT_Img Le resultat de la decantification
+    * @param[in] Img_Quant le bloc d'image quantifiée
+    * @param[in] Q_dyn able de référence Q prévue pour quantifier la luminance dans la norme JPEG
+    *
+    */
     void dequant_JPEG(double **DCT_Img, int **Img_Quant, double **Q_dyn);
 
+
+    /*! @brief renvoie l’écart quadratique moyen calculé entre l’image approchée par l’étape de quantification et l’image d’origine
+    * 
+    * @param[in] Bloc8x8 Le bloc 8x8 de l'image quantifiée
+    *
+    */
     double EQM(unsigned char **Bloc8x8);
+
+    /*! @brief renvoie le taux de compression calculée entre le bloc issu de l’étape de quantification et l’image d’origine
+    * 
+    * @param[in] Img_Quant Le bloc 8x8 de l'image quantifiée
+    *
+    */
     int Taux_Compression(int **Img_Quant);
 
+    /*! @brief Retourne la trame RLE calculée a partir de l'image quantifiée 
+    * 
+    * @param[in] Img_Quant Le bloc 8x8 de l'image quantifiée
+    * @param[in] DC_precedent
+    * @param[in] Trame_size
+    *
+    */
     int* RLE_Block(int **Img_Quant, int DC_precedent, int &Trame_size);
 
+    /*! @brief Fonction qui concatene des trames de tous les blocs 8 × 8 à partir d’une image de hauteur et largeur multiple de 8
+    *
+    */
     int** RLE(void);
 };
 
